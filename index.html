@@ -940,6 +940,59 @@ function renderHist(){
 }
 
 /* ══════ BOOT — UNCHANGED ══════ */
+/* Handle direct URL navigation */
+(function(){
+  var redirect = sessionStorage.getItem('redirectPath');
+  if(redirect){
+    sessionStorage.removeItem('redirectPath');
+    var parts = redirect.split('/').filter(Boolean);
+    if(parts.length === 1){
+      /* state level - e.g. /uttar-pradesh */
+      var state = parts[0].replace(/-/g,' ')
+        .replace(/\b\w/g,c=>c.toUpperCase());
+      setTimeout(()=>showStateLevel(state, parts[0]), 500);
+    } else if(parts.length === 2){
+      /* district level - e.g. /uttar-pradesh/lucknow */
+      var state = parts[0].replace(/-/g,' ')
+        .replace(/\b\w/g,c=>c.toUpperCase());
+      var dist = parts[1].replace(/-/g,' ')
+        .replace(/\b\w/g,c=>c.toUpperCase());
+      setTimeout(()=>showDistrictLevel(state,parts[0],dist,parts[1]), 500);
+    } else if(parts.length >= 4){
+      /* pincode level - e.g. /uttar-pradesh/lucknow/hazratganj/226001 */
+      var pin = parts[3];
+      var name = parts[2].replace(/-/g,' ')
+        .replace(/\b\w/g,c=>c.toUpperCase());
+      setTimeout(()=>window.pcsFullPage(name, pin), 500);
+    }
+  }
+})();
+```
+
+---
+
+### How This Works
+```
+User opens direct URL
+        ↓
+GitHub finds no file → loads 404.html
+        ↓
+404.html saves the URL path to sessionStorage
+        ↓
+Redirects to index.html
+        ↓
+index.html reads saved path → opens correct page
+        ↓
+User sees correct page ✅
+```
+
+---
+
+### After This Fix Every URL Will Work
+```
+pincodesearch.in/uttar-pradesh              → Opens UP state page ✅
+pincodesearch.in/uttar-pradesh/lucknow      → Opens Lucknow page ✅
+pincodesearch.in/uttar-pradesh/lucknow/hazratganj/226001 → Opens full page ✅   
 window.addEventListener('load',()=>{
   initLabels();renderHist();
   const inp=g('pcs-input');
